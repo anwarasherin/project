@@ -1,6 +1,8 @@
 from fastapi import FastAPI, File, UploadFile
+import os
 
 app = FastAPI()
+os.makedirs("uploaded_files", exist_ok=True)
 
 @app.get("/")
 def read_root():
