@@ -11,11 +11,14 @@ def read_root():
 @app.post("/upload/")
 async def upload_file(file: UploadFile = File(...)):
     content = await file.read()
+
+    file_location = f"uploaded_files/{file.filename}"
+    with open(file_location, "wb") as f:
+        f.write(await file.read())  # Save the file
+        
     print("hello",content)
     return {
-        "filename": file.filename,
-        "content_type": file.content_type,
-        "size": len(content)
+       "File saved successfully"
     }
 
 # While uploading a file, Make sure the key is same as the function parameter, ie, 'file'
