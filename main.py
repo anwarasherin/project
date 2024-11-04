@@ -1,12 +1,21 @@
 from fastapi import FastAPI, File, UploadFile
 import os
+from fastapi.responses import HTMLResponse
 
 app = FastAPI()
 os.makedirs("uploaded_files", exist_ok=True)
 
 @app.get("/")
-def read_root():
-    return {"message": "Welcome to Dynamic AES Encryption with blockchain project"}
+async def main():
+    return HTMLResponse(
+        content="""
+        <form action="/upload/" enctype="multipart/form-data" method="post">
+        <input name="file" type="file">
+        <button type="submit">Upload</button>
+        </form>
+        """,
+        status_code=200
+    )
 
 @app.post("/upload/")
 async def upload_file(file: UploadFile = File(...)):
