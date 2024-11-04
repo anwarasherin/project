@@ -23,7 +23,7 @@ async def upload_file(file: UploadFile = File(...)):
 
     file_location = f"uploaded_files/{file.filename}"
     with open(file_location, "wb") as f:
-        f.write(await file.read())  # Save the file
+        f.write(content)  # Save the file
         
     print("hello",content)
     return {
