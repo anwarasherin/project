@@ -1,6 +1,7 @@
 from fastapi import FastAPI, File, UploadFile
-import os
 from fastapi.responses import HTMLResponse
+from utils import save_to_disk
+import os
 
 app = FastAPI()
 os.makedirs("uploaded_files", exist_ok=True)
@@ -21,9 +22,7 @@ async def main():
 async def upload_file(file: UploadFile = File(...)):
     content = await file.read()
 
-    file_location = f"uploaded_files/{file.filename}"
-    with open(file_location, "wb") as f:
-        f.write(content)  # Save the file
+    save_to_disk(file.filename,content)
         
     print("hello",content)
     return {
