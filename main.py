@@ -1,6 +1,6 @@
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import HTMLResponse
-from utils import save_to_disk, encrypt_aes256
+from utils import save_to_disk, encrypt_aes256, decrypt_aes256
 import os
 
 app = FastAPI()
@@ -25,6 +25,9 @@ async def upload_file(file: UploadFile = File(...)):
     key = os.urandom(32)  
     ciphertext = encrypt_aes256(key, content)
     print(f"Ciphertext (in hex): {ciphertext.hex()}")
+
+    # decrypted_text = decrypt_aes256(key, ciphertext)
+    # print(f"Decrypted text: {decrypted_text.decode()}")
 
     save_to_disk(file.filename,content)
         

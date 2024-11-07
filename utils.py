@@ -21,3 +21,16 @@ def encrypt_aes256(key: bytes, plaintext: bytes) -> bytes:
     return iv + ciphertext
 
 
+def decrypt_aes256(key: bytes, ciphertext: bytes) -> bytes:
+    iv = ciphertext[:16]
+    actual_ciphertext = ciphertext[16:]
+    cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+    decryptor = cipher.decryptor()
+
+    decrypted_data = decryptor.update(actual_ciphertext) + decryptor.finalize()
+    unpadder = padding.PKCS7(128).unpadder()
+    
+    plaintext = unpadder.update(decrypted_data) + unpadder.finalize()
+
+    return plaintext
+
