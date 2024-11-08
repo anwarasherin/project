@@ -18,7 +18,7 @@ async def main():
         status_code=200
     )
 
-@app.post("/upload/")
+@app.post("/upload-file/")
 async def upload_file(file: UploadFile = File(...)):
     content = await file.read()
 
@@ -37,3 +37,8 @@ async def upload_file(file: UploadFile = File(...)):
     }
 
 # While uploading a file, Make sure the key is same as the function parameter, ie, 'file'
+
+@app.post("/get-file/")
+async def read_file_content(file: UploadFile = File(...)):
+    content = await file.read()
+    return {"filename": file.filename, "content_size": len(content),"content":content}
