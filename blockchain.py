@@ -1,3 +1,4 @@
+import time
 class Block:
     def __init__(self, index, previous_hash, timestamp, data, hash):
         self.index = index
@@ -9,7 +10,19 @@ class Block:
     def __repr__(self):
         return f"Block(index={self.index}, hash={self.hash}, previous_hash={self.previous_hash})"
 
-block1 = Block(1, "0", 1234567890, "Some data", "abcd1234")
-block2 = Block(1, "abcd1234", 1234567890, "Some data", "abcd1235")
+# Blockchain class
+class Blockchain:
+    def __init__(self):
+        self.chain = []
+        self.create_genesis_block()
 
-print(block1,block2)
+    def create_genesis_block(self):
+        genesis_block = Block(
+            0, "0", int(time.time()), "Genesis Block", 
+            "dumyhash"
+        )
+        self.chain.append(genesis_block)
+
+
+blockchain =  Blockchain()
+print(blockchain)
