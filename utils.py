@@ -2,6 +2,7 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.backends import default_backend
 import os
+import hashlib
 
 def save_to_disk(filename,content):
         file_location = f"uploaded_files/{filename}"
@@ -34,3 +35,6 @@ def decrypt_aes256(key: bytes, ciphertext: bytes) -> bytes:
 
     return plaintext
 
+def calculate_hash(block):
+    block_string = f"{block.index}{block.previous_hash}{block.timestamp}{block.data}"
+    return hashlib.sha256(block_string.encode('utf-8')).hexdigest()

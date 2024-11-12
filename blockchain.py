@@ -1,4 +1,5 @@
 import time
+from utils import calculate_hash
 class Block:
     def __init__(self, index, previous_hash, timestamp, data, hash):
         self.index = index
@@ -19,7 +20,7 @@ class Blockchain:
     def create_genesis_block(self):
         genesis_block = Block(
             0, "0", int(time.time()), "Genesis Block", 
-            "dumyhash"
+            calculate_hash(Block(0, "0", int(time.time()), "Genesis Block", ""))
         )
         self.chain.append(genesis_block)
 
