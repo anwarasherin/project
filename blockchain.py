@@ -24,6 +24,17 @@ class Blockchain:
         )
         self.chain.append(genesis_block)
 
+    def add_block(self, data):
+        previous_block = self.chain[-1]
+        new_block = Block(
+            len(self.chain),
+            previous_block.hash,
+            int(time.time()),
+            data,
+            calculate_hash(Block(len(self.chain), previous_block.hash, int(time.time()), data, ""))
+        )
+        self.chain.append(new_block)
 
 blockchain =  Blockchain()
-print(blockchain)
+blockchain.add_block("Dummy Data")
+print(blockchain.chain)
