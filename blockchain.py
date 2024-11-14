@@ -35,6 +35,22 @@ class Blockchain:
         )
         self.chain.append(new_block)
 
+    def is_chain_valid(self):
+        for i in range(1, len(self.chain)):
+            current_block = self.chain[i]
+            previous_block = self.chain[i - 1]
+
+            # Validate current block hash
+            if current_block.hash != calculate_hash(current_block):
+                return False
+
+            # Validate previous hash
+            if current_block.previous_hash != previous_block.hash:
+                return False
+        return True
+
 blockchain =  Blockchain()
 blockchain.add_block("Dummy Data")
 print(blockchain.chain)
+blockchain.chain[0].hash = "kndjdn"
+print(blockchain.is_chain_valid())
