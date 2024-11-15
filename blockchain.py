@@ -1,3 +1,4 @@
+from fastapi import FastAPI, HTTPException
 import time
 from utils import calculate_hash
 class Block:
@@ -54,3 +55,13 @@ blockchain.add_block("Dummy Data")
 print(blockchain.chain)
 blockchain.chain[0].hash = "kndjdn"
 print(blockchain.is_chain_valid())
+
+
+# FastAPI app setup
+app = FastAPI()
+blockchain = Blockchain()
+
+# API Endpoints
+@app.get("/")
+def get_root():
+    return {"message": "Welcome to the Blockchain Server!"}
