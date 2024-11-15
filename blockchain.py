@@ -65,3 +65,7 @@ blockchain = Blockchain()
 @app.get("/")
 def get_root():
     return {"message": "Welcome to the Blockchain Server!"}
+
+@app.get("/blocks")
+def get_blocks():
+    return [{"index": block.index, "previous_hash": block.previous_hash, "timestamp": block.timestamp, "data": block.data, "hash": block.hash} for block in blockchain.chain]
