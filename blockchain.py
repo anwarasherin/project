@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 import time
 from utils import calculate_hash
 class Block:
@@ -61,6 +62,10 @@ print(blockchain.is_chain_valid())
 app = FastAPI()
 blockchain = Blockchain()
 
+# Request model for adding a block
+class AddBlockRequest(BaseModel):
+    data: str
+
 # API Endpoints
 @app.get("/")
 def get_root():
@@ -69,3 +74,8 @@ def get_root():
 @app.get("/blocks")
 def get_blocks():
     return [{"index": block.index, "previous_hash": block.previous_hash, "timestamp": block.timestamp, "data": block.data, "hash": block.hash} for block in blockchain.chain]
+
+@app.post("/add_block")
+def add_block(request: AddBlockRequest):
+    blockchain.add_block(request.data)
+    return {"message": "Block added successfully", "block": blockchain.chain[-1].__dict__}
