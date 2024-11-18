@@ -13,7 +13,6 @@ class Block:
     def __repr__(self):
         return f"Block(index={self.index}, hash={self.hash}, previous_hash={self.previous_hash})"
 
-# Blockchain class
 class Blockchain:
     def __init__(self):
         self.chain = []
@@ -51,13 +50,6 @@ class Blockchain:
                 return False
         return True
 
-blockchain =  Blockchain()
-blockchain.add_block("Dummy Data")
-print(blockchain.chain)
-blockchain.chain[0].hash = "kndjdn"
-print(blockchain.is_chain_valid())
-
-
 # FastAPI app setup
 app = FastAPI()
 blockchain = Blockchain()
@@ -79,3 +71,8 @@ def get_blocks():
 def add_block(request: AddBlockRequest):
     blockchain.add_block(request.data)
     return {"message": "Block added successfully", "block": blockchain.chain[-1].__dict__}
+
+@app.get("/is_valid")
+def is_valid():
+    valid = blockchain.is_chain_valid()
+    return {"is_valid": valid}
