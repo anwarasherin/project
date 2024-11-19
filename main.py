@@ -1,6 +1,6 @@
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import HTMLResponse
-from utils import save_to_disk, encrypt_aes256, decrypt_aes256
+from utils import save_to_disk, encrypt_aes256, decrypt_aes256,compute_sha256
 import os
 
 app = FastAPI()
@@ -21,19 +21,13 @@ async def main():
 @app.post("/upload-file/")
 async def upload_file(file: UploadFile = File(...)):
     content = await file.read()
-
-    key = os.urandom(32)  
-    ciphertext = encrypt_aes256(key, content)
-    print(f"Ciphertext (in hex): {ciphertext.hex()}")
-
-    # decrypted_text = decrypt_aes256(key, ciphertext)
-    # print(f"Decrypted text: {decrypted_text.decode()}")
-
     save_to_disk(file.filename,content)
-        
-    print("hello",content)
+    hex_hash = compute_sha256(content)
+
     return {
-       "File saved successfully"
+        "message": "File saved successfully",
+        "file_name": file.filename,
+        "sha256_hash": hex_hash
     }
 
 # While uploading a file, Make sure the key is same as the function parameter, ie, 'file'

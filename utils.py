@@ -38,3 +38,8 @@ def decrypt_aes256(key: bytes, ciphertext: bytes) -> bytes:
 def calculate_hash(block):
     block_string = f"{block.index}{block.previous_hash}{block.timestamp}{block.data}"
     return hashlib.sha256(block_string.encode('utf-8')).hexdigest()
+
+def compute_sha256(content: bytes) -> str:
+    sha256_hash = hashlib.sha256()
+    sha256_hash.update(content)
+    return sha256_hash.hexdigest()
