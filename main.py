@@ -2,6 +2,7 @@ from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import HTMLResponse
 from utils import save_to_disk, encrypt_aes256, decrypt_aes256,compute_sha256
 import os
+import requests
 
 app = FastAPI()
 os.makedirs("uploaded_files", exist_ok=True)
@@ -23,6 +24,10 @@ async def upload_file(file: UploadFile = File(...)):
     content = await file.read()
     save_to_disk(file.filename,content)
     hex_hash = compute_sha256(content)
+
+    response = requests.get("http://localhost:8000/latest_block")
+    latest_block = response.json()
+    print(latest_block)
 
     return {
         "message": "File saved successfully",
