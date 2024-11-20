@@ -49,6 +49,11 @@ class Blockchain:
             if current_block.previous_hash != previous_block.hash:
                 return False
         return True
+    
+    def get_latest_block(self):
+        latest_block = self.chain[-1]
+        return latest_block.__dict__
+
 
 # FastAPI app setup
 app = FastAPI()
@@ -76,3 +81,8 @@ def add_block(request: AddBlockRequest):
 def is_valid():
     valid = blockchain.is_chain_valid()
     return {"is_valid": valid}
+
+@app.get("/latest_block")
+def get_latest_block():
+    latest_block = blockchain.get_latest_block()
+    return {"message": "Block added successfully", "block": latest_block}
