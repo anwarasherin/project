@@ -43,3 +43,14 @@ def compute_sha256(content: bytes) -> str:
     sha256_hash = hashlib.sha256()
     sha256_hash.update(content)
     return sha256_hash.hexdigest()
+
+def xor_hashes(hash1: bytes, hash2: bytes) -> bytes:
+    # Ensure both hashes are the same length (32 bytes for SHA-256)
+    hash1_bytes = bytes.fromhex(hash1)
+    hash2_bytes = bytes.fromhex(hash2)
+
+    if len(hash1_bytes) != len(hash2_bytes):
+        raise ValueError("The hashes must have the same length")
+    
+    xor_result = bytes([b1 ^ b2 for b1, b2 in zip(hash1_bytes, hash2_bytes)])
+    return xor_result.hex()

@@ -1,6 +1,6 @@
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import HTMLResponse
-from utils import save_to_disk, encrypt_aes256, decrypt_aes256,compute_sha256
+from utils import save_to_disk, encrypt_aes256, decrypt_aes256,compute_sha256, xor_hashes
 import os
 import requests
 
@@ -26,8 +26,10 @@ async def upload_file(file: UploadFile = File(...)):
     hex_hash = compute_sha256(content)
 
     response = requests.get("http://localhost:8000/latest_block")
-    latest_block = response.json()
-    print(latest_block)
+    latest_block = response.json()['block']
+
+    dynamic_aes_key = xor_hashes(hex_hash,latest_block['hash'])
+    print(dynamic_aes_key)
 
     return {
         "message": "File saved successfully",
