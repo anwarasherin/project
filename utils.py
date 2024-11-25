@@ -53,4 +53,4 @@ def xor_hashes(hash1: bytes, hash2: bytes) -> bytes:
         raise ValueError("The hashes must have the same length")
     
     xor_result = bytes([b1 ^ b2 for b1, b2 in zip(hash1_bytes, hash2_bytes)])
-    return xor_result.hex()
+    return xor_result
