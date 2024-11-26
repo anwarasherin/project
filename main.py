@@ -24,6 +24,8 @@ async def upload_file(file: UploadFile = File(...)):
     file_content = await file.read()
     file_content_hash = compute_sha256(file_content)
 
+    file_base_name, file_extension = os.path.splitext(file.filename)
+
     response = requests.get("http://localhost:8000/latest_block")
     latest_block = response.json()['block']
     latest_block_hash = latest_block['hash']
@@ -33,6 +35,8 @@ async def upload_file(file: UploadFile = File(...)):
 
     encryption_file_content = encrypt_aes256(dynamic_aes_key, file_content)
     print(f"\n\nEncrypted file content (in hex): {encryption_file_content.hex()}")
+
+    save_to_disk(file_base_name+'.enc',encryption_file_content)
 
     return {
         "message": "File saved successfully",
