@@ -1,14 +1,16 @@
 from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
-from utils import save_to_disk, encrypt_aes256, decrypt_aes256,compute_sha256, xor_hashes, generate_ecc_private_and_public_keys, encrypt_key_with_ecc
+from utils import save_to_disk, encrypt_aes256,load_public_key,load_private_key,read_encrypted_data_from_file,decrypt_dict, decrypt_aes256,compute_sha256, xor_hashes, generate_ecc_key_pair,encrypt_dict, save_encrypted_data_to_file
 import os
 import requests
+import pickle
 
+import json
 app = FastAPI()
 os.makedirs("uploaded_files", exist_ok=True)
 
-# generate_ecc_private_and_public_keys()
+# generate_ecc_key_pair()
 
 class FileRequest(BaseModel):
     data: str
@@ -25,12 +27,12 @@ async def main():
         </form>
         <br/>
 
-<h3>Retrieve File</h3>
-<form id="retrieveForm">
-  <label for="data">Enter a filename:</label>
-  <input id="data" name="data" type="text" placeholder="Enter text here" required>
-  <button type="submit">Retrieve</button>
-</form>
+      <h3>Retrieve File</h3>
+      <form id="retrieveForm">
+        <label for="data">Enter a filename:</label>
+        <input id="data" name="data" type="text" placeholder="Enter text here" required>
+        <button type="submit">Retrieve</button>
+      </form>
 
 <script>
   document.getElementById("retrieveForm").addEventListener("submit", async function (event) {
@@ -87,14 +89,9 @@ async def upload_file(file: UploadFile = File(...)):
 })
     new_block = response.json()["block"]
 
-    encrypted_block = encrypt_key_with_ecc(block=new_block,pem_public_key="""-----BEGIN PUBLIC KEY-----
-MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEap+GJl8pg1JmbOf6EfJIz2p+Gtu1
-ubkkcujCWtP/49lAncJenu8wgBe5Ii6q91o2wtufDTk2OKoiDg6SiJELQA==
------END PUBLIC KEY-----""")
-    
-    print("Encrypted Block",encrypted_block.encode().hex())
-    
-    save_to_disk("encrypted_block"+'.enc',encrypted_block.encode())
+    ecc_public_key = load_public_key("ecc_keys/ecc_public_key.pem")
+    encrypted_block = encrypt_dict(new_block,ecc_public_key)    
+    save_encrypted_data_to_file(pickle.dumps(encrypted_block),"encrypted_block.enc")
 
     return {
         "message": "File saved successfully",
@@ -106,5 +103,15 @@ ubkkcujCWtP/49lAncJenu8wgBe5Ii6q91o2wtufDTk2OKoiDg6SiJELQA==
 @app.post("/get-file/")
 async def get_file(request: FileRequest):
     filename = request.data
-    print(filename)
+
+    encrypted_block = read_encrypted_data_from_file("encrypted_block.enc")
+    ecc_private_key = load_private_key("ecc_keys/ecc_private_key.pem")
+    encrypted_block_dict =pickle.loads(encrypted_block)
+    decrypted_block = decrypt_dict(encrypted_block_dict,ecc_private_key)
+
+    dynamic_aes_key= decrypted_block["data"]
+    
+    encrypted_file_content =read_encrypted_data_from_file("main.enc")
+    file_content = decrypt_aes256(bytes.fromhex(dynamic_aes_key),encrypted_file_content)
+    print(file_content)
     return {"message": f"Received filename: "}

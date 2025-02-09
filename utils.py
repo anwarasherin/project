@@ -3,6 +3,7 @@ from cryptography.hazmat.primitives import padding, serialization, hashes
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+from cryptography.hazmat.primitives.serialization import load_pem_public_key
 
 import os
 import hashlib
@@ -13,6 +14,16 @@ def save_to_disk(filename,content):
         file_location = f"uploaded_files/{filename}"
         with open(file_location, "wb") as f:
             f.write(content)
+
+def save_encrypted_data_to_file(encrypted_data, filename):
+    file_location = f"uploaded_files/{filename}"
+    with open(file_location, 'wb') as file:
+        file.write(encrypted_data)
+
+def read_encrypted_data_from_file(filename):
+    file_location = f"uploaded_files/{filename}"
+    with open(file_location, 'rb') as file:
+        return file.read()
 
 def encrypt_aes256(key: bytes, plaintext: bytes) -> bytes:
     iv = os.urandom(16)
@@ -60,60 +71,113 @@ def xor_hashes(hash1: bytes, hash2: bytes) -> bytes:
     xor_result = bytes([b1 ^ b2 for b1, b2 in zip(hash1_bytes, hash2_bytes)])
     return xor_result
 
-def generate_ecc_private_and_public_keys():
-        # Generate private key
-        private_key = ec.generate_private_key(ec.SECP256R1())
+def generate_ecc_key_pair():
+    """Generate ECC private and public keys."""
+    private_key = ec.generate_private_key(ec.SECP256R1(), default_backend())
+    public_key = private_key.public_key()
+    save_private_key(private_key=private_key,file_path="ecc_keys/ecc_private_key.pem")
+    save_public_key(public_key=public_key,file_path="ecc_keys/ecc_public_key.pem")
 
-        # Derive the public key
-        public_key = private_key.public_key()
-
-        # Serialize the private key (PEM format)
-        pem_private_key = private_key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.TraditionalOpenSSL,
-            encryption_algorithm=serialization.NoEncryption()  # No encryption
+def save_private_key(private_key, file_path):
+    """Save the private key without password protection."""
+    with open(file_path, "wb") as key_file:
+        key_file.write(
+            private_key.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.TraditionalOpenSSL,
+                encryption_algorithm=serialization.NoEncryption()
+            )
         )
+    print(f"Private key saved to {file_path}")
 
-        # Serialize the public key (PEM format)
-        pem_public_key = public_key.public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo
+def save_public_key(public_key, file_path):
+    """Save the public key."""
+    with open(file_path, "wb") as key_file:
+        key_file.write(
+            public_key.public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo
+            )
         )
+    print(f"Public key saved to {file_path}")
 
-        # Send the private key securely (via HTTPS, encrypted email, etc.)
-        # Send the public key openly (it can be printed, uploaded to a server, etc.)
+def load_private_key(file_path):
+    """Load a private key without password."""
+    with open(file_path, "rb") as key_file:
+        private_key = serialization.load_pem_private_key(
+            key_file.read(),
+            password=None
+        )
+    print("Private key loaded successfully")
+    return private_key
 
-        print("Private Key:")
-        print(pem_private_key.decode())
+def load_public_key(file_path):
+    """Load a public key."""
+    with open(file_path, "rb") as key_file:
+        public_key = serialization.load_pem_public_key(
+            key_file.read()
+        )
+    print("Public key loaded successfully")
+    return public_key
 
-        print("\nPublic Key:")
-        print(pem_public_key.decode())
+def encrypt_dict(data_dict, public_key):
+    """Encrypt a dictionary using ECC and AES."""
+    # Serialize the dictionary
+    data_bytes = json.dumps(data_dict).encode('utf-8')
 
+    # Generate ephemeral key pair
+    ephemeral_private_key = ec.generate_private_key(ec.SECP256R1(), default_backend())
+    shared_secret = ephemeral_private_key.exchange(ec.ECDH(), public_key)
 
-
-
-def encrypt_key_with_ecc(block: dict, pem_public_key: str) -> str:
-    """Encrypts a blockchain block using ECC and the recipient's public key."""
-    # Convert the block dictionary to a JSON string
-    block_json = json.dumps(block)
-
-    # Load the public key from PEM
-    public_key = serialization.load_pem_public_key(pem_public_key.encode())
-
-    # Perform ECDH with a pre-defined static key (for simplicity)
-    private_key = ec.generate_private_key(ec.SECP256R1())
-    shared_secret = private_key.exchange(ec.ECDH(), public_key)
-
-    # Derive a symmetric key from the shared secret using HKDF
+    # Derive a key from the shared secret
     derived_key = HKDF(
         algorithm=hashes.SHA256(),
         length=32,
         salt=None,
-        info=b"blockchain encryption"
+        info=b'encryption',
+        backend=default_backend()
     ).derive(shared_secret)
 
-    # Encrypt the block using XOR for demonstration purposes
-    encrypted_data = bytes(a ^ b for a, b in zip(block_json.encode(), derived_key[:len(block_json)]))
+    # Encrypt using AES-GCM
+    iv = os.urandom(12)
+    cipher = Cipher(algorithms.AES(derived_key), modes.GCM(iv), backend=default_backend())
+    encryptor = cipher.encryptor()
+    ciphertext = encryptor.update(data_bytes) + encryptor.finalize()
 
-    # Return base64-encoded ciphertext for safe storage or transmission
-    return base64.b64encode(encrypted_data).decode()
+    return {
+        "ephemeral_public_key": ephemeral_private_key.public_key().public_bytes(
+    encoding=serialization.Encoding.PEM,
+    format=serialization.PublicFormat.SubjectPublicKeyInfo
+),
+        "iv": iv,
+        "ciphertext": ciphertext,
+        "tag": encryptor.tag
+    }
+
+def decrypt_dict(encrypted_data, private_key):
+    """Decrypt a dictionary using ECC and AES."""
+    # Extract components from encrypted data
+    ephemeral_public_key = load_pem_public_key(encrypted_data["ephemeral_public_key"])
+    iv = encrypted_data["iv"]
+    ciphertext = encrypted_data["ciphertext"]
+    tag = encrypted_data["tag"]
+
+    # Generate shared secret
+    shared_secret = private_key.exchange(ec.ECDH(), ephemeral_public_key)
+
+    # Derive the key from the shared secret
+    derived_key = HKDF(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=None,
+        info=b'encryption',
+        backend=default_backend()
+    ).derive(shared_secret)
+
+    # Decrypt using AES-GCM
+    cipher = Cipher(algorithms.AES(derived_key), modes.GCM(iv, tag), backend=default_backend())
+    decryptor = cipher.decryptor()
+    decrypted_bytes = decryptor.update(ciphertext) + decryptor.finalize()
+
+    # Deserialize the dictionary
+    return json.loads(decrypted_bytes.decode('utf-8'))
