@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from utils import save_to_disk, encrypt_aes256, decrypt_aes256,compute_sha256, xor_hashes, generate_ecc_private_and_public_keys, encrypt_key_with_ecc
@@ -25,14 +25,40 @@ async def main():
         </form>
         <br/>
 
-        <h3>Retrieve File</h3>
-        <form action="/get-file/" enctype="multipart/form-data" method="post">
-        <label for="filename">Enter a filename:</label>
-        <input name="filename" type="text" placeholder="Enter text here">
-        <button type="submit">Retrive</button>
-        </form>
-        
+<h3>Retrieve File</h3>
+<form id="retrieveForm">
+  <label for="data">Enter a filename:</label>
+  <input id="data" name="data" type="text" placeholder="Enter text here" required>
+  <button type="submit">Retrieve</button>
+</form>
 
+<script>
+  document.getElementById("retrieveForm").addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    const dataValue = document.getElementById("data").value;
+    const jsonBody = { data: dataValue };
+
+    try {
+      const response = await fetch("/get-file/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(jsonBody),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("Success:", result);
+      } else {
+        console.error("Error:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Request failed:", error);
+    }
+  });
+</script>
         """,
         status_code=200
     )
@@ -66,7 +92,9 @@ MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEap+GJl8pg1JmbOf6EfJIz2p+Gtu1
 ubkkcujCWtP/49lAncJenu8wgBe5Ii6q91o2wtufDTk2OKoiDg6SiJELQA==
 -----END PUBLIC KEY-----""")
     
-    save_to_disk("encrypted_block"+'.enc',encrypted_block)
+    print("Encrypted Block",encrypted_block.encode().hex())
+    
+    save_to_disk("encrypted_block"+'.enc',encrypted_block.encode())
 
     return {
         "message": "File saved successfully",
@@ -76,7 +104,7 @@ ubkkcujCWtP/49lAncJenu8wgBe5Ii6q91o2wtufDTk2OKoiDg6SiJELQA==
 # While uploading a file, Make sure the key is same as the function parameter, ie, 'file'
 
 @app.post("/get-file/")
-async def process_filename(file:FileRequest):
-    filename = file.data
-    
+async def get_file(request: FileRequest):
+    filename = request.data
+    print(filename)
     return {"message": f"Received filename: "}
