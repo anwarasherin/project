@@ -1,8 +1,13 @@
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.primitives import padding, serialization, hashes
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+
 import os
 import hashlib
+import base64
+import json
 
 def save_to_disk(filename,content):
         file_location = f"uploaded_files/{filename}"
@@ -54,3 +59,61 @@ def xor_hashes(hash1: bytes, hash2: bytes) -> bytes:
     
     xor_result = bytes([b1 ^ b2 for b1, b2 in zip(hash1_bytes, hash2_bytes)])
     return xor_result
+
+def generate_ecc_private_and_public_keys():
+        # Generate private key
+        private_key = ec.generate_private_key(ec.SECP256R1())
+
+        # Derive the public key
+        public_key = private_key.public_key()
+
+        # Serialize the private key (PEM format)
+        pem_private_key = private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption()  # No encryption
+        )
+
+        # Serialize the public key (PEM format)
+        pem_public_key = public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+
+        # Send the private key securely (via HTTPS, encrypted email, etc.)
+        # Send the public key openly (it can be printed, uploaded to a server, etc.)
+
+        print("Private Key:")
+        print(pem_private_key.decode())
+
+        print("\nPublic Key:")
+        print(pem_public_key.decode())
+
+
+
+
+def encrypt_key_with_ecc(block: dict, pem_public_key: str) -> str:
+    """Encrypts a blockchain block using ECC and the recipient's public key."""
+    # Convert the block dictionary to a JSON string
+    block_json = json.dumps(block)
+
+    # Load the public key from PEM
+    public_key = serialization.load_pem_public_key(pem_public_key.encode())
+
+    # Perform ECDH with a pre-defined static key (for simplicity)
+    private_key = ec.generate_private_key(ec.SECP256R1())
+    shared_secret = private_key.exchange(ec.ECDH(), public_key)
+
+    # Derive a symmetric key from the shared secret using HKDF
+    derived_key = HKDF(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=None,
+        info=b"blockchain encryption"
+    ).derive(shared_secret)
+
+    # Encrypt the block using XOR for demonstration purposes
+    encrypted_data = bytes(a ^ b for a, b in zip(block_json.encode(), derived_key[:len(block_json)]))
+
+    # Return base64-encoded ciphertext for safe storage or transmission
+    return base64.b64encode(encrypted_data).decode()
