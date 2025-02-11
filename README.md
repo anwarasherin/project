@@ -1,5 +1,11 @@
 # Welcome to Dynamic AES with Blockchain
 
+## Create a virtual environment
+
+$ python3 -m venv venv
+
+$ source venv/bin/activate
+
 ## Installation
 
 Install the application dependecies
