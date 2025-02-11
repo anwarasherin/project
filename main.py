@@ -111,7 +111,7 @@ async def get_file(request: FileRequest):
 
     dynamic_aes_key= decrypted_block["data"]
     
-    encrypted_file_content =read_encrypted_data_from_file("main.enc")
+    encrypted_file_content =read_encrypted_data_from_file(filename+".enc")
     file_content = decrypt_aes256(bytes.fromhex(dynamic_aes_key),encrypted_file_content)
     print(file_content)
     return {"message": f"Received filename: "}
