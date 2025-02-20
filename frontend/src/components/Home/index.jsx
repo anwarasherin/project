@@ -131,9 +131,6 @@ function Home() {
 
         <Grid container gap={1}>
           <Grid>
-            <Button variant="contained">Delete</Button>
-          </Grid>
-          <Grid>
             <Button variant="contained" onClick={handleUploadButtonClick}>
               Upload
             </Button>
