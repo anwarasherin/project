@@ -7,9 +7,6 @@ function App() {
   return (
     <>
       <Appbar />
-      <Typography variant="h5" component="h2">
-        Files
-      </Typography>
       <Home />
     </>
   );

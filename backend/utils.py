@@ -110,7 +110,6 @@ def load_private_key(file_path):
             key_file.read(),
             password=None
         )
-    print("Private key loaded successfully")
     return private_key
 
 def load_public_key(file_path):
@@ -119,7 +118,6 @@ def load_public_key(file_path):
         public_key = serialization.load_pem_public_key(
             key_file.read()
         )
-    print("Public key loaded successfully")
     return public_key
 
 def encrypt_dict(data_dict, public_key):
@@ -187,10 +185,10 @@ def decrypt_dict(encrypted_data, private_key):
 
 
 # Helper functions
-def read_db(table_name):
+def read_db():
     if not os.path.exists(DB_FILE):
         with open(DB_FILE, "w") as f:
-            json.dump({table_name: []}, f)
+            json.dump({"files": []}, f)
     
     with open(DB_FILE, "r") as f:
         return json.load(f)

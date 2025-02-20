@@ -1,5 +1,6 @@
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from utils import save_to_disk, encrypt_aes256,load_public_key,load_private_key,read_encrypted_data_from_file,decrypt_dict, decrypt_aes256,compute_sha256, xor_hashes, generate_ecc_key_pair,encrypt_dict, save_encrypted_data_to_file, read_db, write_db
 import os
@@ -10,6 +11,21 @@ import uuid
 
 import json
 app = FastAPI()
+
+origins = [
+    "http://localhost:5173",  # React/Next.js local dev server
+    # "*",  # Allow all origins (not recommended for production)
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # Allow specific origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
+
+
 os.makedirs("uploaded_files", exist_ok=True)
 
 # generate_ecc_key_pair()
@@ -24,21 +40,17 @@ async def upload_file(file: UploadFile = File(...)):
     file_content_hash = compute_sha256(file_content)
 
     file_base_name, file_extension = os.path.splitext(file.filename)
-    fileId = uuid.uuid4()
-    blockId = uuid.uuid4()
+    fileId = str(uuid.uuid4())
+    blockId = str(uuid.uuid4())
 
     response = requests.get("http://localhost:3000/latest_block")
     latest_block = response.json()['block']
     latest_block_hash = latest_block['hash']
 
     dynamic_aes_key = xor_hashes(file_content_hash,latest_block_hash)
-    print("\nDynamic AES Key",dynamic_aes_key.hex())
-
     encryption_file_content = encrypt_aes256(dynamic_aes_key, file_content)
-    print(f"\n\nEncrypted file content (in hex): {encryption_file_content.hex()}")
-
-    save_to_disk(fileId+'.enc',encryption_file_content)
-
+    save_to_disk(fileId +'.enc',encryption_file_content)
+    
     response = requests.post("http://localhost:3000/add_block", json={"data":dynamic_aes_key.hex()},headers={
     "Content-Type": "application/json"
 })
@@ -48,9 +60,9 @@ async def upload_file(file: UploadFile = File(...)):
     encrypted_block = encrypt_dict(new_block,ecc_public_key)    
     save_encrypted_data_to_file(pickle.dumps(encrypted_block),blockId+'.enc')
 
-    db = read_db("files")
-    new_file_data_id = uuid.uuid4()
-    new_file_data = {"id": new_file_data_id, "file_id":fileId, "block_id": blockId}
+    db = read_db()
+    new_file_data_id = str(uuid.uuid4())
+    new_file_data = {"id": new_file_data_id, "file_id":fileId, "block_id": blockId, "original_filename":file_base_name+file_extension}
     db["files"].append(new_file_data)
     write_db(db)
 
@@ -61,21 +73,30 @@ async def upload_file(file: UploadFile = File(...)):
 
 # While uploading a file, Make sure the key is same as the function parameter, ie, 'file'
 
-@app.post("/get-file/")
-async def get_file(request: FileRequest):
-    filename = request.data
 
-    encrypted_block = read_encrypted_data_from_file("encrypted_block.enc")
+@app.get("/files/{id}")
+async def get_user(id:str):
+    db = read_db()
+    file_data = None
+    for file in db["files"]:
+        if file["id"] == id:
+            file_data = file
+            break
+
+    encrypted_block_id = file_data["block_id"]
+    encrypted_file_id = file_data["file_id"]
+
+    encrypted_block = read_encrypted_data_from_file(encrypted_block_id+".enc")
     ecc_private_key = load_private_key("ecc_keys/ecc_private_key.pem")
     encrypted_block_dict =pickle.loads(encrypted_block)
     decrypted_block = decrypt_dict(encrypted_block_dict,ecc_private_key)
 
     dynamic_aes_key= decrypted_block["data"]
     
-    encrypted_file_content =read_encrypted_data_from_file(filename+".enc")
+    encrypted_file_content =read_encrypted_data_from_file(encrypted_file_id+".enc")
     file_content = decrypt_aes256(bytes.fromhex(dynamic_aes_key),encrypted_file_content)
-    print(file_content)
-    return {"message": f"Received filename: "}
+
+    return {"content":file_content,"filename":file_data["original_filename"]}
 
 @app.get("/files")
 def get_files():
