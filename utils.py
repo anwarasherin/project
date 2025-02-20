@@ -10,6 +10,8 @@ import hashlib
 import base64
 import json
 
+DB_FILE = "database.json"
+
 def save_to_disk(filename,content):
         file_location = f"uploaded_files/{filename}"
         with open(file_location, "wb") as f:
@@ -181,3 +183,19 @@ def decrypt_dict(encrypted_data, private_key):
 
     # Deserialize the dictionary
     return json.loads(decrypted_bytes.decode('utf-8'))
+
+
+
+# Helper functions
+def read_db(table_name):
+    if not os.path.exists(DB_FILE):
+        with open(DB_FILE, "w") as f:
+            json.dump({table_name: []}, f)
+    
+    with open(DB_FILE, "r") as f:
+        return json.load(f)
+
+
+def write_db(data):
+    with open(DB_FILE, "w") as f:
+        json.dump(data, f, indent=4)
