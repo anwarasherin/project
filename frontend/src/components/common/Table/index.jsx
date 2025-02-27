@@ -57,9 +57,9 @@ export default function BasicTable({
                 <IconButton onClick={() => handleDownloadButtonClick(row.id)}>
                   <DownloadIcon style={{ color: "#4658A8" }} />
                 </IconButton>
-                <IconButton>
+                {/* <IconButton>
                   <DeleteIcon style={{ color: "#ED4337" }} />
-                </IconButton>
+                </IconButton> */}
               </TableCell>
             </TableRow>
           ))}

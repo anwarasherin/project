@@ -13,7 +13,7 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import axios from "axios";
 
-const tableHeaders = ["ID", "File ID", "Filename", "Block ID", "Actions"];
+const tableHeaders = ["ID", "Filename", "File ID", "Block ID", "Actions"];
 const modalStyle = {
   position: "absolute",
   top: "50%",
