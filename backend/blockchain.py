@@ -2,6 +2,25 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import time
 from utils import calculate_hash
+import os
+import json
+
+DB_FILE = "blocks.json"
+
+
+def read_db():
+    if not os.path.exists(DB_FILE):
+        with open(DB_FILE, "w") as f:
+            json.dump({"blocks":[]}, f)
+    
+    with open(DB_FILE, "r") as f:
+        return json.load(f)
+
+
+def write_db(data):
+    with open(DB_FILE, "w") as f:
+        json.dump(data, f, indent=4)
+
 class Block:
     def __init__(self, index, previous_hash, timestamp, data, hash):
         self.index = index
@@ -15,31 +34,58 @@ class Block:
 
 class Blockchain:
     def __init__(self):
-        self.chain = []
         self.create_genesis_block()
+        self.create_block_database()
 
     def create_genesis_block(self):
+        db = read_db()
+        blocks = db["blocks"]
+
+        if len(blocks) > 0:
+            return
+        
         genesis_block = Block(
             0, "0", int(time.time()), "Genesis Block", 
             calculate_hash(Block(0, "0", int(time.time()), "Genesis Block", ""))
         )
-        self.chain.append(genesis_block)
+
+        db = read_db()
+        db["blocks"].append(genesis_block.__dict__)
+        write_db(db)
+
+
+    def create_block_database(self):
+        if not os.path.exists(DB_FILE):
+            with open(DB_FILE, "w") as f:
+                json.dump({"blocks": []}, f)
 
     def add_block(self, data):
-        previous_block = self.chain[-1]
+        db = read_db()
+        blocks = db["blocks"]
+        previous_block = blocks[-1]
         new_block = Block(
-            len(self.chain),
-            previous_block.hash,
+            len(blocks),
+            previous_block["hash"],
             int(time.time()),
             data,
-            calculate_hash(Block(len(self.chain), previous_block.hash, int(time.time()), data, ""))
+            calculate_hash(Block(len(blocks), previous_block["hash"], int(time.time()), data, ""))
         )
-        self.chain.append(new_block)
+        db = read_db()
+        print("New Block", new_block)
+        db["blocks"].append(new_block.__dict__)
+        write_db(db)
+
+    def get_blocks(self):
+        db = read_db()
+        return db["blocks"]
 
     def is_chain_valid(self):
-        for i in range(1, len(self.chain)):
-            current_block = self.chain[i]
-            previous_block = self.chain[i - 1]
+        db = read_db()
+        chain = db["blocks"]
+        write_db(db)
+        for i in range(1, len(chain)):
+            current_block = chain[i]
+            previous_block = chain[i - 1]
 
             # Validate current block hash
             if current_block.hash != calculate_hash(current_block):
@@ -51,8 +97,9 @@ class Blockchain:
         return True
     
     def get_latest_block(self):
-        latest_block = self.chain[-1]
-        return latest_block.__dict__
+        db = read_db()
+        blocks = db["blocks"]
+        return blocks[-1]
 
 
 # FastAPI app setup
@@ -70,12 +117,12 @@ def get_root():
 
 @app.get("/blocks")
 def get_blocks():
-    return [{"index": block.index, "previous_hash": block.previous_hash, "timestamp": block.timestamp, "data": block.data, "hash": block.hash} for block in blockchain.chain]
+    return blockchain.get_blocks()
 
 @app.post("/add_block")
 def add_block(request: AddBlockRequest):
     blockchain.add_block(request.data)
-    return {"message": "Block added successfully", "block": blockchain.chain[-1].__dict__}
+    return {"message": "Block added successfully", "block": blockchain.get_latest_block()}
 
 @app.get("/is_valid")
 def is_valid():
