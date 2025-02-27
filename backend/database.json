@@ -1,3 +1,16 @@
 {
-  "files": []
+    "files": [
+        {
+            "id": "10ba1b6b-179a-43aa-ab63-eb2ecf532c72",
+            "file_id": "8f9e7661-3917-438b-95c9-3494fd3d287d",
+            "block_id": "74b627f6-a569-4483-ba41-ab8d0646a8ed",
+            "original_filename": "index.py"
+        },
+        {
+            "id": "722b0ab0-9ea9-42f2-941a-6b7546cf1c77",
+            "file_id": "7b7000d7-c39e-4fb8-8773-f80ef6d5bc99",
+            "block_id": "74163af3-e871-41d2-947d-5165d16051b8",
+            "original_filename": "cardslabelmap.txt"
+        }
+    ]
 }

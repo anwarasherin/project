@@ -80,9 +80,12 @@ function Home() {
 
       alert("File uploaded successfully!");
       console.log(response.data);
+      fetchFiles();
     } catch (error) {
       console.error("Error uploading file:", error);
       alert("File upload failed!");
+    } finally {
+      setUploadModalOpen(false);
     }
   };
 
