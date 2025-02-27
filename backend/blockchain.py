@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import time
 from utils import calculate_hash
+from fastapi.middleware.cors import CORSMiddleware
 import os
 import json
 
@@ -105,6 +106,20 @@ class Blockchain:
 # FastAPI app setup
 app = FastAPI()
 blockchain = Blockchain()
+
+origins = [
+    "http://localhost:5173",  # React/Next.js local dev server
+    # "*",  # Allow all origins (not recommended for production)
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # Allow specific origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
+
 
 # Request model for adding a block
 class AddBlockRequest(BaseModel):

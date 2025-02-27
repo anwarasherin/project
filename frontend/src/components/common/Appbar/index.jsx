@@ -1,4 +1,4 @@
-import * as React from "react";
+import { Link } from "react-router-dom";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
@@ -21,6 +21,14 @@ export default function Appbar() {
           <Typography variant="h4" component="div" sx={{ flexGrow: 1 }}>
             Blockchain File Storage
           </Typography>
+
+          {/* Navigation Links */}
+          <Button color="inherit" component={Link} to="/">
+            Home
+          </Button>
+          <Button color="inherit" component={Link} to="/blockchain">
+            Blockchain
+          </Button>
         </Toolbar>
       </AppBar>
     </Box>
