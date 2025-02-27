@@ -8,6 +8,9 @@ import json
 
 DB_FILE = "blocks.json"
 
+if not os.path.exists(DB_FILE):
+    with open(DB_FILE, "w") as f:
+        json.dump({"blocks": []}, f)
 
 def read_db():
     if not os.path.exists(DB_FILE):

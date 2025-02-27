@@ -12,6 +12,10 @@ Install the application dependecies
 
 `$ pip install -r requirements.txt`
 
+Generate ECC Keys
+
+`$ python ecc.py`
+
 Run the backend server
 
 `$ uvicorn main:app --reload`

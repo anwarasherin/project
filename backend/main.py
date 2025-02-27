@@ -28,6 +28,9 @@ app.add_middleware(
 
 os.makedirs("uploaded_files", exist_ok=True)
 
+if not os.path.exists("database.json"):
+    with open("database.json", "w") as f:
+        json.dump({"files": []}, f)
 # generate_ecc_key_pair()
 
 class FileRequest(BaseModel):
