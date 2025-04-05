@@ -1,18 +1,13 @@
-import { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Typography } from "@mui/material";
-
-import Home from "./components/Home";
-import Appbar from "./components/common/Appbar";
-import BlockchainFlow from "./components/Blockchain";
+import Login from "./components/Login";
+import POC from "./components/POC";
 
 function App() {
   return (
     <Router>
-      <Appbar />
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/blockchain" element={<BlockchainFlow />} />
+        <Route path="/" element={<POC />} />
+        <Route path="/login" element={<Login />} />
       </Routes>
     </Router>
   );

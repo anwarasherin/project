@@ -32,9 +32,12 @@ export default function BasicTable({
       <Table sx={{ minWidth: 650 }} aria-label="simple table">
         <TableHead>
           <TableRow>
-            {tableHeaders.map((headerLabel) => {
+            {tableHeaders.map((headerLabel, idx) => {
               return (
-                <TableCell sx={{ fontWeight: "bold", fontSize: 16 }}>
+                <TableCell
+                  key={headerLabel + idx}
+                  sx={{ fontWeight: "bold", fontSize: 16 }}
+                >
                   {headerLabel}
                 </TableCell>
               );

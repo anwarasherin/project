@@ -15,11 +15,17 @@
     "@mui/icons-material": "^6.4.5",
     "@mui/material": "^6.4.5",
     "@xyflow/react": "^12.4.3",
+    "asn1.js": "^5.4.1",
     "axios": "^1.7.9",
+    "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.1",
+    "elliptic": "^6.6.1",
     "moment": "^2.30.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-router-dom": "^7.2.0"
+    "react-router-dom": "^7.2.0",
+    "readable-stream": "^4.7.0",
+    "vite-plugin-node-polyfills": "^0.23.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",

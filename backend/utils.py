@@ -124,7 +124,7 @@ def encrypt_dict(data_dict, public_key):
     """Encrypt a dictionary using ECC and AES."""
     # Serialize the dictionary
     data_bytes = json.dumps(data_dict).encode('utf-8')
-
+    print("PUblic KEYEYE",public_key)
     # Generate ephemeral key pair
     ephemeral_private_key = ec.generate_private_key(ec.SECP256R1(), default_backend())
     shared_secret = ephemeral_private_key.exchange(ec.ECDH(), public_key)
