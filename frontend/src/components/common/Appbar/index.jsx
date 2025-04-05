@@ -1,36 +1,50 @@
-import { Link } from "react-router-dom";
-import AppBar from "@mui/material/AppBar";
-import Box from "@mui/material/Box";
-import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import IconButton from "@mui/material/IconButton";
+import { useLocation } from "react-router-dom";
+import React, { useState } from "react";
+import { useDispatch } from "react-redux";
+import {
+  MdOutlineDarkMode,
+  MdOutlineTranslate,
+  MdOutlinePerson,
+  MdOutlineNotifications,
+  MdOutlineLogout,
+  MdLogout,
+} from "react-icons/md";
 
-export default function Appbar() {
+import { cn } from "../../../utils";
+import DropDownMenu from "../../common/DropDownMenu";
+import { logout } from "../../../redux/slices/userSlice";
+
+function Appbar() {
+  const location = useLocation();
+  const pathname = location.pathname;
+  const dispatch = useDispatch();
+
+  const handleLogoutClick = () => {
+    dispatch(logout());
+  };
+
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static">
-        <Toolbar>
-          <IconButton
-            size="large"
-            edge="start"
-            color="inherit"
-            aria-label="menu"
-            sx={{ mr: 2 }}
-          ></IconButton>
-          <Typography variant="h4" component="div" sx={{ flexGrow: 1 }}>
-            Blockchain File Storage
-          </Typography>
-
-          {/* Navigation Links */}
-          <Button color="inherit" component={Link} to="/">
-            Home
-          </Button>
-          <Button color="inherit" component={Link} to="/blockchain">
-            Blockchain
-          </Button>
-        </Toolbar>
-      </AppBar>
-    </Box>
+    <header className="bg-white flex flex-row justify-end items-center p-4">
+      <div className="flex flex-row gap-4 justify-center items-center">
+        <div className="flex flex-row gap-2">
+          <MdOutlineDarkMode className=" bg-blue-500 text-white text-4xl p-1 rounded-md" />
+          <MdOutlineNotifications className="bg-gray-600 text-white text-4xl p-1 rounded-md" />
+          <DropDownMenu
+            menuButton={
+              <MdOutlinePerson className="bg-amber-500 ml-3 text-white text-4xl p-1 rounded-3xl" />
+            }
+            options={[
+              {
+                label: "Logout",
+                icon: <MdLogout />,
+                onClick: handleLogoutClick,
+              },
+            ]}
+          />
+        </div>
+      </div>
+    </header>
   );
 }
+
+export default Appbar;

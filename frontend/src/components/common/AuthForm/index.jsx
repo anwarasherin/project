@@ -71,7 +71,7 @@ const FormFields = ({ isSignUp, register, errors }) => {
       )}
       {errors.name && <ErrorMessage message={errors.name.message} />}
 
-      <TextInput label="Email" t {...register("email")} {...commonInputProps} />
+      <TextInput label="Email" {...register("email")} {...commonInputProps} />
       {errors.email && <ErrorMessage message={errors.email.message} />}
 
       <TextInput
