@@ -23,7 +23,7 @@ export const loginUser = async (
 ) => {
   setSubmissionLoading(true);
   try {
-    const res = await fetch("http://localhost:3000/login", {
+    const res = await fetch("http://localhost:3000/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(userData),
@@ -35,9 +35,9 @@ export const loginUser = async (
       return;
     }
 
-    const { token, user } = await res.json();
+    const { user, token } = await res.json();
     dispatch(login({ user, token }));
-    navigate("/");
+    navigate("/dashboard");
   } catch (error) {
     setSubmissionErrorMessage(error.message);
   } finally {
