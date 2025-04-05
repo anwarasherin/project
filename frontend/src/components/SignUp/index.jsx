@@ -1,14 +1,12 @@
 import { useState } from "react";
-import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate } from "react-router-dom";
 
 import AuthForm from "../common/AuthForm";
-import { loginSchema, loginUser } from "./helper";
+import { signUpSchema, signUpUser } from "./helper";
 
-function Login() {
-  const dispatch = useDispatch();
+function SignUp() {
   const navigate = useNavigate();
   const [submissionErrorMessage, setSubmissionErrorMessage] = useState(null);
   const [isSubmissionLoading, setSubmissionLoading] = useState(false);
@@ -18,24 +16,18 @@ function Login() {
     handleSubmit,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(loginSchema),
-    defaultValues: { email: "", password: "" },
+    resolver: zodResolver(signUpSchema),
+    defaultValues: { name: "", email: "", password: "", role: "student" },
   });
 
   const onSubmit = (data) => {
-    loginUser(
-      data,
-      dispatch,
-      navigate,
-      setSubmissionErrorMessage,
-      setSubmissionLoading
-    );
+    signUpUser(data, navigate, setSubmissionErrorMessage, setSubmissionLoading);
   };
 
   return (
     <div className="flex flex-row justify-center items-center w-screen h-screen p-8 gap-16">
       <AuthForm
-        type="login"
+        type="signup"
         onSubmit={handleSubmit(onSubmit)}
         register={register}
         errors={errors}
@@ -46,4 +38,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default SignUp;

@@ -1,9 +1,15 @@
 import { ec } from "elliptic";
 import { Buffer } from "buffer";
 import crypto from "crypto";
+import { clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 // Create a new EC instance with P-256 curve
 let EC;
+
+export const cn = (...inputs) => {
+  return twMerge(clsx(inputs));
+};
 
 export const initializeEC = () => {
   EC = new ec("p256");
