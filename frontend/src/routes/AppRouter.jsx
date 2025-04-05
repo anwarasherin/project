@@ -1,14 +1,12 @@
 import { Routes, Route, BrowserRouter as Router } from "react-router-dom";
-import PublicRoutes from "./PublicLayout";
-import PrivateRoutes from "./PrivateLayout";
+import PublicLayout from "./PublicLayout";
+import PrivateLayout from "./PrivateLayout";
 
 import Login from "../components/Login";
 import SignUp from "../components/SignUp";
 
 import Dashboard from "../components/Dashboard";
 import Settings from "../components/Settings";
-import PublicLayout from "./PublicLayout";
-import PrivateLayout from "./PrivateLayout";
 
 const AppRouter = () => {
   return (
