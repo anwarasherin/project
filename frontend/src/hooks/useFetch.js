@@ -13,7 +13,7 @@ const useFetch = (url, options = {}, autoFetch = true) => {
 
     const headers = {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+      Authorization: token,
     };
 
     try {

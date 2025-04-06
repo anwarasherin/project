@@ -4,7 +4,6 @@ import PrivateLayout from "./PrivateLayout";
 
 import Login from "../components/Login";
 import SignUp from "../components/SignUp";
-
 import Dashboard from "../components/Dashboard";
 import Settings from "../components/Settings";
 

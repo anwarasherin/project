@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { MdOutlineAdd } from "react-icons/md";
 import { FaUpload } from "react-icons/fa6";
 import Select from "react-select";
@@ -7,17 +8,21 @@ import Button from "../common/Button";
 import PageTitle from "../common/PageTitle";
 import Modal from "../common/Modal";
 import useFetch from "../../hooks/useFetch";
-
-const options = [
-  { value: "chocolate", label: "Chocolate" },
-  { value: "strawberry", label: "Strawberry" },
-  { value: "vanilla", label: "Vanilla" },
-];
+import { initializeEC } from "../../utils";
 
 function Dashboard() {
   const { data: files = [], loading, error } = useFetch("/api/courses");
+  const {
+    data: usersData,
+    loading: isUsersLoading,
+    error: usersError,
+  } = useFetch("http://localhost:3000/api/users");
   const [isUploadModalOpen, setUploadModalOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const token = useSelector((state) => state.user.token);
+  const currentUserData = useSelector((state) => state.user.user);
+  const users = usersData?.data?.users || [];
 
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
@@ -32,6 +37,54 @@ function Dashboard() {
     setUploadModalOpen(false);
     setSelectedFile(null);
   };
+
+  const uploadEncryptedFile = async (formData) => {
+    try {
+      const res = await fetch(
+        "http://localhost:3000/api/files/encrypted-file/",
+        {
+          method: "POST",
+          headers: {
+            Authorization: token,
+          },
+          body: formData,
+        }
+      );
+
+      if (!res.ok) {
+        return false;
+      }
+
+      const data = await res.json();
+
+      return data;
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
+  };
+
+  const handleOnProceed = async () => {
+    const formData = new FormData();
+    const mergedUsers = selectedUsers.map((su) => {
+      const match = users.find((user) => user._id === su.value);
+      return match ? { ...match } : null;
+    });
+
+    formData.append("file", selectedFile);
+    formData.append("shared", JSON.stringify(mergedUsers));
+    const upload = await uploadEncryptedFile(formData);
+
+    if (upload) setUploadModalOpen(false);
+  };
+
+  const handleSharedUsersChange = (selectedOptions) => {
+    setSelectedUsers(selectedOptions);
+  };
+
+  useEffect(() => {
+    initializeEC();
+  }, []);
 
   return (
     <div className="p-6 flex flex-col gap-6">
@@ -48,10 +101,16 @@ function Dashboard() {
       </div>
       <UploadFileModal
         isOpen={isUploadModalOpen}
-        setOpen={setUploadModalOpen}
         selectedFile={selectedFile}
         onCancel={handleOnCancel}
+        onProceed={handleOnProceed}
         handleFileChange={handleFileChange}
+        handleSharedUsersChange={handleSharedUsersChange}
+        users={users
+          .filter((user) => user._id !== currentUserData.id)
+          .map((user) => {
+            return { label: user.name, value: user._id };
+          })}
       />
     </div>
   );
@@ -59,11 +118,12 @@ function Dashboard() {
 
 const UploadFileModal = ({
   isOpen,
-  setOpen,
   onProceed,
   onCancel,
   selectedFile,
   handleFileChange,
+  users,
+  handleSharedUsersChange,
 }) => {
   return (
     <Modal isOpen={isOpen} close={onCancel}>
@@ -77,7 +137,7 @@ const UploadFileModal = ({
             type="file"
             id="fileUpload"
             className="hidden"
-            accept=".jpg, .jpeg, .png, .pdf"
+            accept=".txt .html .js .css .py .text .json"
             onChange={handleFileChange}
           />
           <label
@@ -96,9 +156,10 @@ const UploadFileModal = ({
           <Select
             isMulti
             name="options"
-            options={options}
+            options={users}
             className="basic-multi-select"
             classNamePrefix="select"
+            onChange={handleSharedUsersChange}
           />
         </div>
 

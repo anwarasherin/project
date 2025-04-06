@@ -1,21 +1,12 @@
-import { ec } from "elliptic";
-import { Buffer } from "buffer";
-import crypto from "crypto";
-import { clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-// Create a new EC instance with P-256 curve
+const { ec } = require("elliptic");
+const crypto = require("crypto");
 let EC;
 
-export const cn = (...inputs) => {
-  return twMerge(clsx(inputs));
-};
-
-export const initializeEC = () => {
+const initializeEC = () => {
   EC = new ec("p256");
 };
 
-export const generateECCKeyPairs = () => {
+const generateECCKeyPairs = () => {
   const keyPair = EC.genKeyPair();
 
   const privateKeyHex = keyPair.getPrivate("hex");
@@ -34,7 +25,6 @@ export const generateECCKeyPairs = () => {
   return { publicKeyPEM, privateKeyPEM };
 };
 
-// Convert to Base64 for PEM formatting
 function toBase64(buffer) {
   return buffer
     .toString("base64")
@@ -42,10 +32,8 @@ function toBase64(buffer) {
     .join("\n");
 }
 
-export function pemToECKey(pem, isPrivate = false) {
-  const base64Key = pem
-    .replace(/-----.*?KEY-----/g, "") // Remove PEM headers
-    .replace(/\n/g, ""); // Remove newlines
+function pemToECKey(pem, isPrivate = false) {
+  const base64Key = pem.replace(/-----.*?KEY-----/g, "").replace(/\n/g, "");
 
   const keyBuffer = Buffer.from(base64Key, "base64");
   const hexKey = keyBuffer.toString("hex");
@@ -55,10 +43,7 @@ export function pemToECKey(pem, isPrivate = false) {
     : EC.keyFromPublic(hexKey, "hex");
 }
 
-/**
- * AES Encryption using shared secret
- */
-export function encryptAES(data, sharedSecret) {
+function encryptAES(data, sharedSecret) {
   const key = crypto.createHash("sha256").update(sharedSecret).digest(); // Derive AES key
   const iv = crypto.randomBytes(12); // IV for AES-GCM
   const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
@@ -71,10 +56,7 @@ export function encryptAES(data, sharedSecret) {
   return `${encrypted}.${iv.toString("base64")}.${authTag.toString("base64")}`;
 }
 
-/**
- * AES Decryption
- */
-export function decryptAES(encryptedData, sharedSecret) {
+function decryptAES(encryptedData, sharedSecret) {
   const [encrypted, iv, authTag] = encryptedData
     .split(".")
     .map((part) => Buffer.from(part, "base64"));
@@ -89,12 +71,8 @@ export function decryptAES(encryptedData, sharedSecret) {
   return decrypted;
 }
 
-/**
- * Encrypt a message using ECC public key
- */
-export function encryptWithECC(publicKeyPEM, message) {
+function encryptWithECC(publicKeyPEM, message) {
   const publicKey = pemToECKey(publicKeyPEM, false);
-  console.log("ldmd");
 
   // Generate an ephemeral key pair
   const ephemeralKey = EC.genKeyPair();
@@ -117,31 +95,22 @@ export function encryptWithECC(publicKeyPEM, message) {
   return { encryptedMessage, ephemeralPublicKeyPEM };
 }
 
-/**
- * Decrypt message using ECC private key
- */
-export function decryptWithECC(
-  privateKeyPEM,
-  encryptedData,
-  ephemeralPublicKeyPEM
-) {
+function decryptWithECC(privateKeyPEM, encryptedData, ephemeralPublicKeyPEM) {
   const privateKey = pemToECKey(privateKeyPEM, true);
   const ephemeralPublicKey = pemToECKey(ephemeralPublicKeyPEM, false);
 
-  // Compute shared secret
   const sharedSecret = privateKey
     .derive(ephemeralPublicKey.getPublic())
     .toString(16);
 
-  // Decrypt message using AES
   return decryptAES(encryptedData, sharedSecret);
 }
 
-export const sha256 = (message) => {
+const sha256 = (message) => {
   return crypto.createHash("sha256").update(message).digest("hex");
 };
 
-export const xorShaHashes = (hex1, hex2) => {
+const xorShaHashes = (hex1, hex2) => {
   const buf1 = Buffer.from(hex1, "hex");
   const buf2 = Buffer.from(hex2, "hex");
 
@@ -153,4 +122,13 @@ export const xorShaHashes = (hex1, hex2) => {
   }
 
   return result.toString("hex");
+};
+
+module.exports = {
+  encryptWithECC,
+  initializeEC,
+  sha256,
+  xorShaHashes,
+  encryptAES,
+  decryptAES,
 };
