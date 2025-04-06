@@ -1,9 +1,18 @@
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import { LuLoaderCircle } from "react-icons/lu";
+
 import Button from "../common/Button";
 import PageTitle from "../common/PageTitle";
+import Modal from "../common/Modal";
 import { generateECCKeyPairs, initializeEC } from "../../utils";
-import { useEffect } from "react";
+import { sendPublicKey } from "./helper";
 
 function Settings() {
+  const token = useSelector((state) => state.user.token);
+  const [isSubmissionLoading, setSubmissionLoading] = useState(false);
+  const [isSubmissionErrorMessage, setSubmissionErrorMessage] = useState(null);
+
   function downloadPEMFile(pemContent, fileName) {
     const blob = new Blob([pemContent], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
@@ -21,6 +30,13 @@ function Settings() {
 
     downloadPEMFile(privateKeyPEM, "private_key.pem");
     downloadPEMFile(publicKeyPEM, "public_key.pem");
+
+    sendPublicKey(
+      publicKeyPEM,
+      setSubmissionErrorMessage,
+      setSubmissionLoading,
+      token
+    );
   };
 
   useEffect(() => {
@@ -33,6 +49,15 @@ function Settings() {
       <div className="flex flex-row">
         <Button onClick={handleCreateECKeyPairs}>Create EC Key Pair</Button>
       </div>
+      <Modal
+        isOpen={isSubmissionLoading}
+        close={() => isSubmissionLoading(false)}
+      >
+        <div className="flex flex-row justify-center gap-2 items-center">
+          <LuLoaderCircle className="h-5 w-5 animate-spin text-blue-700" />
+          <span>Storing...</span>
+        </div>
+      </Modal>
     </div>
   );
 }

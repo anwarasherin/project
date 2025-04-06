@@ -22,6 +22,10 @@ const User = mongoose.model(
       max: 255,
       required: true,
     },
+    eccPublicKey: {
+      type: String,
+      required: false,
+    },
   })
 );
 
