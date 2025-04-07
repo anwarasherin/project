@@ -1,17 +1,22 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { MdOutlineAdd } from "react-icons/md";
+import { MdOutlineAdd, MdOutlineDownload } from "react-icons/md";
 import { FaUpload } from "react-icons/fa6";
 import Select from "react-select";
 
 import Button from "../common/Button";
 import PageTitle from "../common/PageTitle";
 import Modal from "../common/Modal";
+import TLTable from "../common/TLTable";
 import useFetch from "../../hooks/useFetch";
 import { initializeEC } from "../../utils";
 
 function Dashboard() {
-  const { data: files = [], loading, error } = useFetch("/api/courses");
+  const {
+    data: filesData,
+    loading,
+    error,
+  } = useFetch("http://localhost:3000/api/files");
   const {
     data: usersData,
     loading: isUsersLoading,
@@ -23,6 +28,7 @@ function Dashboard() {
   const token = useSelector((state) => state.user.token);
   const currentUserData = useSelector((state) => state.user.user);
   const users = usersData?.data?.users || [];
+  const files = filesData?.data?.files || [];
 
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
@@ -90,13 +96,22 @@ function Dashboard() {
     <div className="p-6 flex flex-col gap-6">
       <PageTitle title="Dashboard" />
       <ActionButtons onClick={handleAddNewFileClick} />
-      <div className="flex flex-row flex-wrap gap-2">
+      <div className="flex flex-col basis-[70%] bg-white h-80 rounded-md p-4">
         {!files?.length && (
           <div className="flex flex-col flex-grow justify-center items-center h-[50vh]">
             <div className="text-3xl font-bold text-gray-600">
               No Files Found
             </div>
           </div>
+        )}
+
+        {files?.length && (
+          <TLTable
+            headers={["ID", "Original Filename", "Type", "Actions"]}
+            rows={files.map((file) => {
+              return <TableRow id={file._id} file={file} />;
+            })}
+          />
         )}
       </div>
       <UploadFileModal
@@ -190,6 +205,28 @@ const ActionButtons = ({ onClick }) => {
         <span>New File</span>
       </Button>
     </div>
+  );
+};
+
+const TableRow = ({ file, onClick = () => {} }) => {
+  const { _id: id, originalFileName, type } = file;
+  const data = [
+    id,
+    originalFileName,
+    type.toUpperCase(),
+    <div onClick={onClick}>
+      <MdOutlineDownload className="bg-blue-500 text-3xl text-white p-1 rounded-lg" />
+    </div>,
+  ];
+
+  return (
+    <tr key={id}>
+      {data.map((d) => (
+        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+          {d}
+        </td>
+      ))}
+    </tr>
   );
 };
 

@@ -11,6 +11,19 @@ const { encryptAES } = require("../utils/ecc");
 
 const router = express.Router();
 
+router.get("/", auth, async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const files = await FileModal.find({ user: userId });
+
+    return res
+      .status(200)
+      .json({ message: "Files Fetched Successfully", data: { files } });
+  } catch (err) {
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 router.post("/encrypted-file", uploadMemory, auth, async (req, res) => {
   try {
     const ownerId = req.user._id;
