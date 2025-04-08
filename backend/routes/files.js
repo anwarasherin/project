@@ -6,7 +6,7 @@ const { uploadMemory } = require("../middlewares/upload");
 const auth = require("../middlewares/auth");
 const { FileModal } = require("../models/File");
 const { Block } = require("../models/Block");
-const { createBlock } = require("../routes/blocks");
+const { createBlock } = require("./blocks");
 const { sha256, xorShaHashes, encryptWithECC } = require("../utils/ecc");
 const { encryptAES } = require("../utils/ecc");
 

@@ -1,11 +1,5 @@
-backend/__pycache__/
-backend/uploaded_files/
-backend/venv/
-backend/ecc_keys/
-backend/database.json
-backend/blocks.json
 
 frontend/node_modules/
 
-node-backend/node_modules/
+backend/node_modules/
 
