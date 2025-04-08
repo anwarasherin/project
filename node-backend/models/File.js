@@ -9,6 +9,9 @@ const File = mongoose.model(
     originalFileName: {
       type: String,
     },
+    encryptedBlockName: {
+      type: String,
+    },
     type: {
       type: String,
       enum: ["shared", "owned"],

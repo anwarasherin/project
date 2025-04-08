@@ -1,5 +1,6 @@
 const express = require("express");
 const fs = require("fs");
+const path = require("path");
 const { v4: uuid } = require("uuid");
 const { uploadMemory } = require("../middlewares/upload");
 const auth = require("../middlewares/auth");
@@ -50,6 +51,7 @@ router.post("/encrypted-file", uploadMemory, auth, async (req, res) => {
     const ownerFileItem = new FileModal({
       encryptedFileName: encryptedFileName,
       originalFileName: originalname,
+      encryptedBlockName: encryptedBlockName,
       type: "owned",
       user: ownerId,
       block: newOwnerBlock._id,
@@ -63,7 +65,7 @@ router.post("/encrypted-file", uploadMemory, auth, async (req, res) => {
       const encryptedShardUserBlockName = uuid() + ".enc";
       const {
         encryptedMessage: sharedUserEncryptedBlock,
-        sharedUserEphemeralPublicKeyPEM,
+        ephemeralPublicKeyPEM: sharedUserEphemeralPublicKeyPEM,
       } = encryptWithECC(
         sharedUser.eccPublicKey,
         JSON.stringify(newSharedUserBlock)
@@ -77,6 +79,7 @@ router.post("/encrypted-file", uploadMemory, auth, async (req, res) => {
       const sharedUserFileItem = new FileModal({
         encryptedFileName: encryptedFileName,
         originalFileName: originalname,
+        encryptedBlockName: encryptedShardUserBlockName,
         type: "shared",
         user: sharedUser._id,
         block: newSharedUserBlock._id,
@@ -89,6 +92,46 @@ router.post("/encrypted-file", uploadMemory, auth, async (req, res) => {
     res.status(201).send({ message: "Encrypted file uploaded" });
   } catch (ex) {
     res.send("Error");
+  }
+});
+
+router.get("/:id", auth, async (req, res) => {
+  try {
+    const { id: fileId } = req.params;
+    const file = await FileModal.findById(fileId);
+
+    if (!file) {
+      return res.status(404).json({ error: "File not found" });
+    }
+
+    const encryptedFilePath = path.join(
+      __dirname,
+      "..",
+      "uploads",
+      file.encryptedFileName
+    );
+    const encryptedBlockPath = path.join(
+      __dirname,
+      "..",
+      "uploads",
+      file.encryptedBlockName
+    );
+
+    const encryptedFileContent = fs.readFileSync(encryptedFilePath, "utf-8");
+    const encryptedBlockContent = fs.readFileSync(encryptedBlockPath, "utf-8");
+
+    return res.status(200).send({
+      message: "Encrypted file & block fetched",
+      data: {
+        encryptedFile: encryptedFileContent,
+        encryptedBlock: encryptedBlockContent,
+        ephemeralPublicKey: file.ephemeralPublicKey,
+        originalFileName: file.originalFileName,
+      },
+    });
+  } catch (err) {
+    console.log("req is here", err);
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 });
 

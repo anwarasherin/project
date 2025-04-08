@@ -9,7 +9,7 @@ import PageTitle from "../common/PageTitle";
 import Modal from "../common/Modal";
 import TLTable from "../common/TLTable";
 import useFetch from "../../hooks/useFetch";
-import { initializeEC } from "../../utils";
+import { decryptAES, decryptWithECC, initializeEC } from "../../utils";
 
 function Dashboard() {
   const {
@@ -23,7 +23,10 @@ function Dashboard() {
     error: usersError,
   } = useFetch("http://localhost:3000/api/users");
   const [isUploadModalOpen, setUploadModalOpen] = useState(false);
+  const [isDownloadModalOpen, setDownloadModalOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedPrivateKeyFile, setSelectedPrivateKeyFile] = useState(null);
+  const [selectedEncryptionId, setSelectedEncryptionId] = useState(null);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const token = useSelector((state) => state.user.token);
   const currentUserData = useSelector((state) => state.user.user);
@@ -88,6 +91,90 @@ function Dashboard() {
     setSelectedUsers(selectedOptions);
   };
 
+  const getEncryptedFiles = async (id) => {
+    try {
+      const res = await fetch(`http://localhost:3000/api/files/${id}`, {
+        headers: {
+          Authorization: token,
+        },
+      });
+
+      if (!res.ok) {
+        return false;
+      }
+
+      const data = await res.json();
+
+      return data;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  const handlePrivateKeyFileChange = (event) => {
+    setSelectedPrivateKeyFile(event.target.files[0]);
+  };
+
+  const handleDownloadClickFile = (id) => {
+    setDownloadModalOpen(true);
+    setSelectedEncryptionId(id);
+  };
+
+  const handleDownloadModalOnCancel = () => {
+    setDownloadModalOpen(false);
+    setSelectedPrivateKeyFile(null);
+    setSelectedEncryptionId(null);
+  };
+
+  const downloadEncryptedFile = (content, filename) => {
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadModalOnProceed = async () => {
+    const encryptedFiles = await getEncryptedFiles(selectedEncryptionId);
+
+    if (encryptedFiles) {
+      const {
+        encryptedBlock,
+        encryptedFile,
+        ephemeralPublicKey,
+        originalFileName,
+      } = encryptedFiles.data;
+
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        const privateKeyPEM = e.target.result;
+        console.log("File content:", privateKeyPEM, ephemeralPublicKey);
+
+        const decryptedBlock = decryptWithECC(
+          privateKeyPEM,
+          encryptedBlock,
+          ephemeralPublicKey
+        );
+
+        const { data: aesKey } = JSON.parse(decryptedBlock);
+        const decryptedFileContent = decryptAES(encryptedFile, aesKey);
+
+        downloadEncryptedFile(decryptedFileContent, originalFileName);
+      };
+
+      reader.onerror = (e) => {
+        console.error("Error reading file:", e);
+      };
+
+      reader.readAsText(selectedPrivateKeyFile);
+    }
+  };
+
   useEffect(() => {
     initializeEC();
   }, []);
@@ -109,7 +196,13 @@ function Dashboard() {
           <TLTable
             headers={["ID", "Original Filename", "Type", "Actions"]}
             rows={files.map((file) => {
-              return <TableRow id={file._id} file={file} />;
+              return (
+                <TableRow
+                  id={file._id}
+                  file={file}
+                  onClick={handleDownloadClickFile}
+                />
+              );
             })}
           />
         )}
@@ -126,6 +219,13 @@ function Dashboard() {
           .map((user) => {
             return { label: user.name, value: user._id };
           })}
+      />
+      <DownloadFileModal
+        isOpen={isDownloadModalOpen}
+        selectedFile={selectedPrivateKeyFile}
+        onCancel={handleDownloadModalOnCancel}
+        onProceed={handleDownloadModalOnProceed}
+        handleFileChange={handlePrivateKeyFileChange}
       />
     </div>
   );
@@ -214,7 +314,7 @@ const TableRow = ({ file, onClick = () => {} }) => {
     id,
     originalFileName,
     type.toUpperCase(),
-    <div onClick={onClick}>
+    <div onClick={() => onClick(id)}>
       <MdOutlineDownload className="bg-blue-500 text-3xl text-white p-1 rounded-lg" />
     </div>,
   ];
@@ -227,6 +327,59 @@ const TableRow = ({ file, onClick = () => {} }) => {
         </td>
       ))}
     </tr>
+  );
+};
+
+const DownloadFileModal = ({
+  isOpen,
+  onProceed,
+  onCancel,
+  handleFileChange,
+  selectedFile,
+}) => {
+  return (
+    <Modal isOpen={isOpen} close={onCancel}>
+      <div className="flex flex-col gap-4">
+        <h2 className="text-xl font-bold text-center text-black">
+          Upload Private Key
+        </h2>
+
+        <div className="flex flex-col p-4 border-1 gap-1 justify-center items-center border-dashed border-gray-500 border-spacing-1">
+          <input
+            type="file"
+            id="fileUpload"
+            className="hidden"
+            accept=".pem"
+            onChange={handleFileChange}
+          />
+          <label
+            htmlFor="fileUpload"
+            className="flex flex-col items-center justify-center"
+          >
+            <FaUpload className="text-2xl text-gray-500" />
+            <div className="text-gray-500">Upload</div>
+            {selectedFile && (
+              <div className="text-base text-gray-500">{selectedFile.name}</div>
+            )}
+          </label>
+        </div>
+
+        <div className="flex flex-row justify-center gap-2">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onProceed}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Proceed
+          </button>
+        </div>
+      </div>
+    </Modal>
   );
 };
 
