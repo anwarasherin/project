@@ -6,7 +6,9 @@ const router = express.Router();
 
 router.get("/", auth, async (req, res) => {
   try {
-    const users = await User.find().select(["_id", "name", "eccPublicKey"]);
+    const users = await User.find({
+      eccPublicKey: { $exists: true, $ne: null },
+    }).select(["_id", "name", "eccPublicKey"]);
 
     return res
       .status(200)
