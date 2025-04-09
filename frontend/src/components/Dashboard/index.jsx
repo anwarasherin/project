@@ -16,6 +16,7 @@ function Dashboard() {
     data: filesData,
     loading,
     error,
+    fetchData: fetchFiles,
   } = useFetch("http://localhost:3000/api/files");
   const {
     data: usersData,
@@ -28,6 +29,7 @@ function Dashboard() {
   const [selectedPrivateKeyFile, setSelectedPrivateKeyFile] = useState(null);
   const [selectedEncryptionId, setSelectedEncryptionId] = useState(null);
   const [selectedUsers, setSelectedUsers] = useState([]);
+  const [errorMessage, setErrorMessage] = useState(null);
   const token = useSelector((state) => state.user.token);
   const currentUserData = useSelector((state) => state.user.user);
   const users = usersData?.data?.users || [];
@@ -84,7 +86,11 @@ function Dashboard() {
     formData.append("shared", JSON.stringify(mergedUsers));
     const upload = await uploadEncryptedFile(formData);
 
-    if (upload) setUploadModalOpen(false);
+    if (upload) {
+      setUploadModalOpen(false);
+      fetchFiles();
+      setSelectedFile(null);
+    }
   };
 
   const handleSharedUsersChange = (selectedOptions) => {
@@ -139,6 +145,7 @@ function Dashboard() {
   };
 
   const handleDownloadModalOnProceed = async () => {
+    setErrorMessage(null);
     const encryptedFiles = await getEncryptedFiles(selectedEncryptionId);
 
     if (encryptedFiles) {
@@ -153,7 +160,7 @@ function Dashboard() {
 
       reader.onload = (e) => {
         const privateKeyPEM = e.target.result;
-        console.log("File content:", privateKeyPEM, ephemeralPublicKey);
+        console.log("db");
 
         const decryptedBlock = decryptWithECC(
           privateKeyPEM,
@@ -161,10 +168,16 @@ function Dashboard() {
           ephemeralPublicKey
         );
 
+        if (!decryptedBlock) {
+          setErrorMessage("Invalid key!");
+          return;
+        }
+
         const { data: aesKey } = JSON.parse(decryptedBlock);
         const decryptedFileContent = decryptAES(encryptedFile, aesKey);
 
         downloadEncryptedFile(decryptedFileContent, originalFileName);
+        setDownloadModalOpen(false);
       };
 
       reader.onerror = (e) => {
@@ -226,6 +239,7 @@ function Dashboard() {
         onCancel={handleDownloadModalOnCancel}
         onProceed={handleDownloadModalOnProceed}
         handleFileChange={handlePrivateKeyFileChange}
+        errorMessage={errorMessage}
       />
     </div>
   );
@@ -336,6 +350,7 @@ const DownloadFileModal = ({
   onCancel,
   handleFileChange,
   selectedFile,
+  errorMessage,
 }) => {
   return (
     <Modal isOpen={isOpen} close={onCancel}>
@@ -363,6 +378,12 @@ const DownloadFileModal = ({
             )}
           </label>
         </div>
+
+        {errorMessage && (
+          <div className="flex flex-row justify-center text-red-600">
+            {errorMessage}
+          </div>
+        )}
 
         <div className="flex flex-row justify-center gap-2">
           <button

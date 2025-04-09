@@ -75,18 +75,21 @@ export function encryptAES(data, sharedSecret) {
  * AES Decryption
  */
 export function decryptAES(encryptedData, sharedSecret) {
-  const [encrypted, iv, authTag] = encryptedData
-    .split(".")
-    .map((part) => Buffer.from(part, "base64"));
+  try {
+    const [encrypted, iv, authTag] = encryptedData
+      .split(".")
+      .map((part) => Buffer.from(part, "base64"));
 
-  const key = crypto.createHash("sha256").update(sharedSecret).digest();
-  const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
-  decipher.setAuthTag(authTag); // Set authentication tag
+    const key = crypto.createHash("sha256").update(sharedSecret).digest();
+    const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
+    decipher.setAuthTag(authTag); // Set authentication tag
 
-  let decrypted = decipher.update(encrypted, "base64", "utf8");
-  decrypted += decipher.final("utf8");
-
-  return decrypted;
+    let decrypted = decipher.update(encrypted, "base64", "utf8");
+    decrypted += decipher.final("utf8");
+    return decrypted;
+  } catch (ex) {
+    return false;
+  }
 }
 
 /**
@@ -126,12 +129,21 @@ export function decryptWithECC(
   ephemeralPublicKeyPEM
 ) {
   const privateKey = pemToECKey(privateKeyPEM, true);
+
+  if (!privateKey) return false;
+
   const ephemeralPublicKey = pemToECKey(ephemeralPublicKeyPEM, false);
+
+  if (!ephemeralPublicKey) return false;
 
   // Compute shared secret
   const sharedSecret = privateKey
     .derive(ephemeralPublicKey.getPublic())
     .toString(16);
+
+  console.log("ins 2");
+  decryptAES(encryptedData, sharedSecret);
+  console.log("ins 3");
 
   // Decrypt message using AES
   return decryptAES(encryptedData, sharedSecret);
