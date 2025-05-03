@@ -6,6 +6,7 @@ const { uploadMemory } = require("../middlewares/upload");
 const auth = require("../middlewares/auth");
 const { FileModal } = require("../models/File");
 const { Block } = require("../models/Block");
+const { User } = require("../models/User");
 const { createBlock } = require("./blocks");
 const { sha256, xorShaHashes, encryptWithECC } = require("../utils/ecc");
 const { encryptAES } = require("../utils/ecc");
@@ -28,7 +29,8 @@ router.get("/", auth, async (req, res) => {
 router.post("/encrypted-file", uploadMemory, auth, async (req, res) => {
   try {
     const ownerId = req.user._id;
-    const ownerPublicKey = req.user.eccPublicKey;
+    const user = await User.findOne({ _id: ownerId }).select(["eccPublicKey"]);
+    const ownerPublicKey = user.eccPublicKey;
     const originalname = req.file.originalname;
     const fileBuffer = req.file.buffer;
     const fileContent = fileBuffer.toString();
@@ -42,6 +44,7 @@ router.post("/encrypted-file", uploadMemory, auth, async (req, res) => {
     const encryptedFileName = uuid() + ".enc";
     const encryptedBlockName = uuid() + ".enc";
     const newOwnerBlock = await createBlock(aesKey);
+
     const { encryptedMessage: encryptedBlock, ephemeralPublicKeyPEM } =
       encryptWithECC(ownerPublicKey, JSON.stringify(newOwnerBlock));
 
@@ -91,6 +94,7 @@ router.post("/encrypted-file", uploadMemory, auth, async (req, res) => {
 
     res.status(201).send({ message: "Encrypted file uploaded" });
   } catch (ex) {
+    console.log("exceptio,exn,ex", ex);
     res.send("Error");
   }
 });

@@ -3,6 +3,7 @@ import {
   MdChevronLeft,
   MdOutlineSpaceDashboard,
   MdOutlineSettings,
+  MdViewInAr,
 } from "react-icons/md";
 import { Link, useLocation } from "react-router-dom";
 
@@ -15,6 +16,7 @@ const sidebarMenuItems = [
     to: "/dashboard",
     icon: <MdOutlineSpaceDashboard />,
   },
+  { label: "Blockchain", to: "/blockchain", icon: <MdViewInAr /> },
   { label: "Settings", to: "/settings", icon: <MdOutlineSettings /> },
 ];
 

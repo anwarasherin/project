@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import { ReactFlow, Controls, Background, Handle } from "@xyflow/react";
 import { Tooltip } from "@mui/material"; // If using MUI
 import "@xyflow/react/dist/style.css";
-import axios from "axios";
 import moment from "moment";
+import { useSelector } from "react-redux";
+import PageTitle from "../common/PageTitle";
 
 // const blockchain = [
 //   { id: "1", previous_hash: "0000", hash: "a1b2c3", timestamp: "10:00 AM" },
@@ -17,9 +18,9 @@ const BlockNode = ({ data }) => {
       <p className="text-sm font-bold">Block #{data.id}</p>
       <p className="text-xs truncate w-40 overflow-hidden">
         Prev:
-        <Tooltip title={data["previous_hash"]}>
+        <Tooltip title={data["previousHash"]}>
           <span className="cursor-pointer">
-            {data["previous_hash"].slice(0, 12)}...
+            {data["previousHash"].slice(0, 12)}...
           </span>
         </Tooltip>
       </p>
@@ -45,6 +46,7 @@ const BlockNode = ({ data }) => {
 };
 
 const BlockchainFlow = () => {
+  const token = useSelector((state) => state.user.token);
   const [blockchain, setBlockchain] = useState([]);
 
   useEffect(() => {
@@ -52,11 +54,18 @@ const BlockchainFlow = () => {
   }, []);
 
   const fetchBlocks = async () => {
-    const response = await axios.get("http://localhost:3000/blocks");
-    const blocks = response.data.map((item, id) => ({
-      id: id.toString(),
+    const response = await fetch("http://localhost:3000/api/blocks/", {
+      headers: {
+        Authorization: token,
+      },
+    });
+
+    const res = await response.json();
+    const blocks = res.map((item, id) => ({
+      id: item._id.toString(),
       ...item,
     }));
+
     setBlockchain(blocks);
   };
 
@@ -64,7 +73,7 @@ const BlockchainFlow = () => {
     return {
       id: block.id,
       type: "customBlock",
-      position: { x: index * 250, y: 100 },
+      position: { x: index * 400, y: 100 },
       data: block,
     };
   });
@@ -77,10 +86,9 @@ const BlockchainFlow = () => {
     animated: true,
   }));
 
-  console.log("Here", nodes);
-
   return (
-    <div style={{ height: "100vh", width: "100vw" }}>
+    <div className="p-6 flex flex-col gap-8 h-[100%]">
+      <PageTitle title="Blockchain" />
       <ReactFlow
         nodes={nodes}
         edges={edges}

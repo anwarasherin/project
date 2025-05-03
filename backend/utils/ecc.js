@@ -33,6 +33,7 @@ function toBase64(buffer) {
 }
 
 function pemToECKey(pem, isPrivate = false) {
+  console.log("meow", pem);
   const base64Key = pem.replace(/-----.*?KEY-----/g, "").replace(/\n/g, "");
 
   const keyBuffer = Buffer.from(base64Key, "base64");

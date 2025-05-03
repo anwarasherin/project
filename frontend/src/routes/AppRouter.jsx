@@ -6,6 +6,7 @@ import Login from "../components/Login";
 import SignUp from "../components/SignUp";
 import Dashboard from "../components/Dashboard";
 import Settings from "../components/Settings";
+import Blockchain from "../components/Blockchain";
 
 const AppRouter = () => {
   return (
@@ -19,6 +20,7 @@ const AppRouter = () => {
 
         <Route element={<PrivateLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/blockchain" element={<Blockchain />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
       </Routes>

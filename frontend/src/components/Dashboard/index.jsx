@@ -51,6 +51,7 @@ function Dashboard() {
 
   const uploadEncryptedFile = async (formData) => {
     try {
+      console.log(formData);
       const res = await fetch(
         "http://localhost:3000/api/files/encrypted-file/",
         {

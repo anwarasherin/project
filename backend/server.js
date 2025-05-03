@@ -19,7 +19,9 @@ app.use("/api/files", fileRoutes);
 initializeEC();
 
 mongoose
-  .connect("mongodb://localhost/project", {})
+  .connect(
+    "mongodb+srv://test_user:okJDmCHz0Kw4a4yt@cluster0.jkmlp.mongodb.net/project"
+  )
   .then(() => {
     console.log("Connected to mongodb");
   })

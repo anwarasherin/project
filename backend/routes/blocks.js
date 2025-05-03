@@ -18,6 +18,12 @@ router.get("/latest", auth, async (req, res) => {
   res.json(latestBlock);
 });
 
+router.get("/", auth, async (req, res) => {
+  const allBlocks = await Block.find().sort({ index: 1 });
+  if (!allBlocks) return res.status(404).json({ error: "No blocks yet" });
+  res.json(allBlocks);
+});
+
 router.post("/", async (req, res) => {
   try {
     const { key: data } = req.body;
