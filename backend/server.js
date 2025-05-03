@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const app = express();
+const dotenv = require("dotenv").config();
 
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/users");
@@ -19,9 +20,7 @@ app.use("/api/files", fileRoutes);
 initializeEC();
 
 mongoose
-  .connect(
-    "mongodb+srv://test_user:okJDmCHz0Kw4a4yt@cluster0.jkmlp.mongodb.net/project"
-  )
+  .connect(process.env.MONGODB_URI)
   .then(() => {
     console.log("Connected to mongodb");
   })
