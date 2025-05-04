@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { API_URL } from "../../utils/constants";
 
 export const signUpSchema = z.object({
   name: z
@@ -27,7 +28,7 @@ export const signUpUser = async (
   setSubmissionLoading(true);
 
   try {
-    const res = await fetch("http://localhost:3000/api/auth/signup", {
+    const res = await fetch(API_URL + "/auth/signup", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

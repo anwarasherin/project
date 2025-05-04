@@ -1,3 +1,5 @@
+import { API_URL } from "../../utils/constants";
+
 export const sendPublicKey = async (
   eccPublicKey,
   setSubmissionErrorMessage,
@@ -6,7 +8,7 @@ export const sendPublicKey = async (
 ) => {
   setSubmissionLoading(true);
   try {
-    const res = await fetch("http://localhost:3000/api/users/store-key", {
+    const res = await fetch(API_URL + "/users/store-key", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

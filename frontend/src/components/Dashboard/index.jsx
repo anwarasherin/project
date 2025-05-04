@@ -10,6 +10,7 @@ import Modal from "../common/Modal";
 import TLTable from "../common/TLTable";
 import useFetch from "../../hooks/useFetch";
 import { decryptAES, decryptWithECC, initializeEC } from "../../utils";
+import { API_URL } from "../../utils/constants";
 
 function Dashboard() {
   const {
@@ -17,12 +18,12 @@ function Dashboard() {
     loading,
     error,
     fetchData: fetchFiles,
-  } = useFetch("http://localhost:3000/api/files");
+  } = useFetch(API_URL + "/files");
   const {
     data: usersData,
     loading: isUsersLoading,
     error: usersError,
-  } = useFetch("http://localhost:3000/api/users");
+  } = useFetch(API_URL + "/users");
   const [isUploadModalOpen, setUploadModalOpen] = useState(false);
   const [isDownloadModalOpen, setDownloadModalOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -52,16 +53,13 @@ function Dashboard() {
   const uploadEncryptedFile = async (formData) => {
     try {
       console.log(formData);
-      const res = await fetch(
-        "http://localhost:3000/api/files/encrypted-file/",
-        {
-          method: "POST",
-          headers: {
-            Authorization: token,
-          },
-          body: formData,
-        }
-      );
+      const res = await fetch(API_URL + "/files/encrypted-file/", {
+        method: "POST",
+        headers: {
+          Authorization: token,
+        },
+        body: formData,
+      });
 
       if (!res.ok) {
         return false;
@@ -100,7 +98,7 @@ function Dashboard() {
 
   const getEncryptedFiles = async (id) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/files/${id}`, {
+      const res = await fetch(`${API_URL}/files/${id}`, {
         headers: {
           Authorization: token,
         },

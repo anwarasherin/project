@@ -5,6 +5,7 @@ import "@xyflow/react/dist/style.css";
 import moment from "moment";
 import { useSelector } from "react-redux";
 import PageTitle from "../common/PageTitle";
+import { API_URL } from "../../utils/constants";
 
 // const blockchain = [
 //   { id: "1", previous_hash: "0000", hash: "a1b2c3", timestamp: "10:00 AM" },
@@ -54,7 +55,7 @@ const BlockchainFlow = () => {
   }, []);
 
   const fetchBlocks = async () => {
-    const response = await fetch("http://localhost:3000/api/blocks/", {
+    const response = await fetch(API_URL + "/blocks/", {
       headers: {
         Authorization: token,
       },

@@ -12,6 +12,7 @@ import Table from "../common/Table";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import axios from "axios";
+import { API_URL } from "../../utils/constants";
 
 const tableHeaders = ["ID", "Filename", "File ID", "Block ID", "Actions"];
 const modalStyle = {
@@ -46,7 +47,7 @@ function Home() {
   const [allFiles, setAllFiles] = useState([]);
 
   const fetchFiles = async () => {
-    const response = await axios.get("http://localhost:8000/files");
+    const response = await axios.get(API_URL + "files");
     setAllFiles(response.data);
   };
 
